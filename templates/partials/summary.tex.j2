@@ -1,0 +1,9 @@
+{%- if profile.summary %}
+%% ── 个人简介 ──────────────────────────────────────────────────────────────
+\section{\faUser\ 个人简介}
+
+\begin{onehalfspacing}
+{{ profile.summary | trim | md_inline }}
+\end{onehalfspacing}
+
+{% endif %}

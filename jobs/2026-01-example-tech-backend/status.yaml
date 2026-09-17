@@ -1,0 +1,14 @@
+applied_at: 2026-01-09
+channel: "官网投递"
+referrer: ""
+current_stage: interviewing
+
+timeline:
+  - date: 2026-01-09
+    event: "投递简历"
+  - date: 2026-01-14
+    event: "技术一面"
+    result: passed
+  - date: 2026-01-14
+    event: "确认岗位按高级岗推进，无固定夜间值班"
+    result: "risk_validated"

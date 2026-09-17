@@ -1,0 +1,17 @@
+# 示例数据（虚构）— 请替换为你自己的信息
+name: "李明"
+email: "liming@example.com"
+phone: "(+86) 138-0000-0000"
+github:
+  username: "example-user"
+  url: "https://github.com/example-user"
+homepage: "https://example.com"
+location: "北京"
+title: "后端工程师"
+target_location: "北京"
+expected_salary: "面议"
+summary: >
+  7 年后端开发经验，主要方向是内容与教育类业务的服务端开发，在领域建模、服务化拆分与检索系统建设上形成了成体系的实践。
+  主导课程平台的服务化改造，按领域边界拆出 6 个服务并建立契约测试与灰度发布流程，发布回滚范围从全站收敛到单服务，发布耗时从 40 分钟降到 8 分钟；
+  牵头站内搜索平台建设，支撑日均 800 万次检索请求，平均检索耗时从 180ms 降到 60ms。
+  具备扎实的工程素养，熟悉 JVM 性能分析与线上问题定位，主导过多次容量评估与故障复盘。

@@ -1,0 +1,22 @@
+%% ── 个人信息 ──────────────────────────────────────────────────────────────
+\name{ {{- profile.name -}} }
+
+\basicInfo{
+  \phone{ {{- profile.phone -}} }
+  \textperiodcentered\
+  \emaillink{ {{- profile.email -}} }
+  \textperiodcentered\
+  \github[{{ profile.github.username }}]{ {{- profile.github.url -}} }
+  {%- if profile.homepage %}
+  \textperiodcentered\
+  \homepage{ {{- profile.homepage -}} }
+  {%- endif %}
+}
+
+\basicInfo{
+  \faMapMarker\ 意向城市：{{ profile.target_location }}
+  \textperiodcentered\
+  \faBriefcase\ 意向岗位：{{ profile.title }}
+  \textperiodcentered\
+  \faMoneyBill\ 期望薪酬：{{ profile.expected_salary }}
+}

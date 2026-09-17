@@ -1,0 +1,7 @@
+# 完整版简历（make full）中的项目展示顺序。
+# 未在此列出的项目会按目录名排序追加在后面。
+order:
+  - course_platform
+  - search_platform
+  - content_review
+  - data_pipeline

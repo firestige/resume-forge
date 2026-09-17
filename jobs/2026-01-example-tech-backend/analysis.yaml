@@ -1,0 +1,74 @@
+# 示例分析结果（虚构）— 由 AI 从 jd.md 与 base/ 素材生成
+parsed_at: 2026-01-08
+source: recruiting_app
+company: "示例科技"
+role: "服务端开发工程师（高级）"
+level: "高级/专家"
+location: "北京"
+
+keywords:
+  must_have:
+    - "Java/Go"
+    - "高并发"
+    - "分布式系统"
+    - "性能优化"
+    - "中间件"
+  nice_to_have:
+    - "云原生"
+    - "开源贡献"
+    - "中台建设"
+
+match_score:
+  overall: 82
+  details:
+    - skill: "高并发系统设计"
+      match: strong
+      evidence: "课程平台选课链路：峰值写入 800 → 3.5k QPS"
+    - skill: "性能优化"
+      match: strong
+      evidence: "站内搜索平台：平均检索耗时 180ms → 60ms"
+    - skill: "中台/平台建设"
+      match: strong
+      evidence: "内容审核平台 + 站内搜索平台"
+    - skill: "Go 开发"
+      match: partial
+      evidence: "有 Go 经验但非主力语言"
+    - skill: "云原生"
+      match: weak
+      evidence: "缺少 K8s 生产实践"
+
+gaps:
+  - gap: "云原生实践偏少，简历中没有 K8s / Service Mesh 证据"
+    severity: "medium"
+  - gap: "Go 深度不足，可能在语言运行时问题上被追问"
+    severity: "medium"
+
+risks:
+  - id: "level_mismatch"
+    category: "级别/薪资"
+    severity: "medium"
+    signal: "JD 写 5 年以上，但招聘者提到团队同时在招专家岗，当前 HC 级别未确认"
+    impact: "可能导致薪资带与面评标准和预期不一致"
+    mitigation: "先确认当前沟通 HC 的真实级别，再决定是否深度定制简历"
+    validation_question: "当前在沟通的 HC 是否按专家岗推进？"
+    status: "open"
+
+  - id: "oncall_pressure"
+    category: "作息/值班"
+    severity: "low"
+    signal: "岗位涉及核心业务链路，JD 中提到业务量增长下的稳定性保障"
+    impact: "可能存在固定值班或业务高峰期的加班要求"
+    mitigation: "在后续沟通中确认值班制度与频率"
+    validation_question: "该岗位是否参与线上值班？频率如何？"
+    status: "open"
+
+risk_summary:
+  overall: "medium"
+  decision: "continue_with_validation"
+  note: "技术匹配较强，需要验证岗位级别与值班强度"
+
+resume_advice:
+  - "项目顺序：课程平台 → 站内搜索平台 → 实时数据管道"
+  - "个人介绍立三个论点：高并发链路、性能治理、平台化建设"
+  - "技能部分把高并发与中间件相关条目前置"
+  - "保持完整工作时间轴，弱相关经历只降权不删除"

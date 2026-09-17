@@ -1,0 +1,7 @@
+%% ── 工作经历 ──────────────────────────────────────────────────────────────
+\section{\faUsers\ 工作经历}
+
+{% for exp in experience %}
+\datedsubsection{\textbf{ {{- exp.company -}} } {{ exp.location }}}{ {{- exp.period -}} }
+\role{ {{- exp.role -}} }{ {{- exp.level | default('') -}} }
+{% endfor %}

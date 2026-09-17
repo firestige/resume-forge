@@ -1,0 +1,9 @@
+{%- if certifications %}
+%% ── 资质证书 ──────────────────────────────────────────────────────────────
+\section{\faCertificate\ 资质证书}
+
+{% for cert in certifications %}
+\datedsubsection{\textbf{ {{- cert.name -}} }}{ {{- cert.year -}} }
+{% endfor %}
+
+{% endif %}

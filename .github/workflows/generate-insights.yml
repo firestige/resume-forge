@@ -1,0 +1,23 @@
+name: Generate Insights
+
+on:
+  # insights 已改为 deploy 时实时生成，此 workflow 仅保留手动触发用于调试
+  workflow_dispatch:
+
+jobs:
+  insights:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Aggregate insights
+        run: python scripts/insights.py
+
+      # insights 数据不再写回 repo，由 deploy-pages.yml 在构建时实时生成

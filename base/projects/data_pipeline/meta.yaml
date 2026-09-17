@@ -1,0 +1,7 @@
+id: data_pipeline
+name: "实时数据管道"
+company: "蓝鲸信息"
+period: "2019.9 -- 2021.3"
+tech: ["Kafka", "Flink", "数据建模", "一致性保障"]
+role: "核心开发"
+tags: ["数据管道", "流处理", "数据建模"]

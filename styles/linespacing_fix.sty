@@ -1,0 +1,10 @@
+% linespacing_fix.sty
+% Disables extra space before \section in onehalfspacing environment
+% From billryan/resume: https://github.com/billryan/resume
+\makeatletter
+\let\latex@@startbreaks\@startsection
+\def\@startsection#1#2#3#4#5#6{%
+  \everypar{}%
+  \latex@@startbreaks{#1}{#2}{#3}{#4}{#5}{#6}%
+}
+\makeatother

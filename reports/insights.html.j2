@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>洞察报告 — 求职管理</title>
+  <link rel="stylesheet" href="assets/style.css?v={{ asset_version }}">
+</head>
+<body>
+<header class="site-header">
+  <h1>洞察报告</h1>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-label="切换导航">菜单</button>
+  <nav>
+    <a href="index.html">总览</a>
+    <a href="insights.html" class="active">洞察</a>
+    <a href="jobs/index.html">岗位</a>
+    <a href="weekly/index.html">周报</a>
+    <a href="resumes/index.html">简历下载</a>
+  </nav>
+  <span class="updated">更新：{{ generated_at }}</span>
+</header>
+
+<main>
+  {% set kw = insights.keyword_trends %}
+  {% set gaps = insights.skill_gaps %}
+  {% set patterns = insights.interview_patterns %}
+  {% set self_model = insights.self_model %}
+  {% set validation_label = {'simulation_only': '仅模拟', 'mixed': '混合验证', 'validated': '已验证'} %}
+  {% set gap_label = {'expression': '表达', 'capability': '能力'} %}
+  {% set severity_label = {'high': '高', 'medium': '中', 'low': '低'} %}
+
+  <div class="two-col">
+    <!-- 关键词分类热力 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>高频需求分类热力（{{ kw.total_jobs | default(0) }} 岗位）</h2>
+        <a class="detail-link" href="insights/category-heatmap.html">详情</a>
+      </div>
+      {% if kw.category_heatmap %}
+      <div class="heat-grid">
+        {% for item in kw.category_heatmap[:5] %}
+        <div class="heat-cell" style="--heat: {{ item.pct | default(0) }}%;">
+          <div class="heat-title">{{ item.category }}</div>
+          <div class="heat-meta">{{ item.count }} 次 · {{ item.pct }}%</div>
+          <div class="heat-tags">
+            {% for t in item.keywords[:5] %}<span>{{ t }}</span>{% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p class="empty">暂无数据。</p>
+      {% endif %}
+    </section>
+
+    <!-- 关键词云 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>关键词云（已去重聚合）</h2>
+        <a class="detail-link" href="insights/canonical-keywords.html">详情</a>
+      </div>
+      {% if kw.canonical_keywords %}
+        <div class="word-cloud">
+        {% for item in kw.canonical_keywords[:5] %}
+          <span class="cloud-item" style="--w: {{ item.count }};">{{ item.keyword }}</span>
+        {% endfor %}
+        </div>
+        <p class="empty mt">说明：已自动将 Spring Boot / Spring Cloud 等同类词汇归并到统一类别。</p>
+      {% else %}
+        <p class="empty">暂无数据。</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="two-col">
+    <!-- 可改进差距 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>优先改进薄弱项（可行动 {{ gaps.actionable_count | default(0) }} 项）</h2>
+        <a class="detail-link" href="insights/focus-gaps.html">详情</a>
+      </div>
+      {% if gaps.focus_gaps %}
+      <ul class="gap-list">
+      {% for item in gaps.focus_gaps[:5] %}
+        <li>
+          <span class="badge danger">P{{ loop.index }}</span>
+          <span class="gap-main">{{ item.gap }}</span>
+          <span class="gap-sub">{{ item.category }} · 频次 {{ item.count }} · 分值 {{ item.priority_score }} · 建议周期 {{ item.improve_horizon }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无数据。</p>
+      {% endif %}
+    </section>
+
+    <!-- 低权重硬约束 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>低权重硬约束（{{ gaps.non_actionable_count | default(0) }} 项，不消耗主精力）</h2>
+        <a class="detail-link" href="insights/non-actionable-gaps.html">详情</a>
+      </div>
+      {% if gaps.non_actionable_gaps %}
+      <ul class="gap-list">
+      {% for item in gaps.non_actionable_gaps[:5] %}
+        <li>
+          <span class="badge warn">低优先</span>
+          <span class="gap-main">{{ item.gap }}</span>
+          <span class="gap-sub">{{ item.category }} · 频次 {{ item.count }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无硬约束项。</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="two-col">
+    <section class="card">
+      <div class="card-head">
+        <h2>面试复盘薄弱项（仅真实面试）</h2>
+        <a class="detail-link" href="insights/interview-gaps.html">详情</a>
+      </div>
+      {% if gaps.from_interviews %}
+      <ul class="gap-list">
+      {% for item in gaps.from_interviews[:5] %}
+        <li>
+          <span class="badge danger">×{{ item.count }}</span>
+          <span class="gap-main">{{ item.item }}</span>
+          <span class="gap-sub">{{ item.category }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无真实面试复盘数据。</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>备战清单（面试准备/模拟，不计入复盘）</h2>
+        <a class="detail-link" href="insights/prep-gaps.html">详情</a>
+      </div>
+      {% if gaps.from_prep %}
+      <ul class="gap-list">
+      {% for item in gaps.from_prep[:5] %}
+        <li><span class="badge warn">准备</span> {{ item.item }}</li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无准备会话数据。</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="two-col">
+    <section class="card">
+      <div class="card-head">
+        <h2>自我认知快照</h2>
+        <span class="detail-link">{{ validation_label.get(self_model.validation_stage, self_model.validation_stage | default('unknown')) }}</span>
+      </div>
+      {% if self_model.recurring_weaknesses %}
+      <ul class="gap-list">
+      {% for item in self_model.recurring_weaknesses[:3] %}
+        <li>
+          <span class="badge {% if item.category == 'capability' %}danger{% else %}warn{% endif %}">{{ gap_label.get(item.category, item.category) }}</span>
+          <span class="gap-main">{{ item.statement }}</span>
+          <span class="gap-sub">严重度 {{ severity_label.get(item.severity, item.severity) }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无自我认知快照。</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>待验证判断</h2>
+        <a class="detail-link" href="weekly/{{ insights.weekly_summary.week | default('index') }}.html">周报</a>
+      </div>
+      {% if self_model.suspected_strengths or self_model.positioning_hypotheses %}
+      <ul class="gap-list">
+      {% for item in (self_model.suspected_strengths | default([]))[:2] %}
+        <li>
+          <span class="badge ok">优势假设</span>
+          <span class="gap-main">{{ item.statement }}</span>
+          <span class="gap-sub">置信度 {{ item.confidence }}</span>
+        </li>
+      {% endfor %}
+      {% for item in (self_model.positioning_hypotheses | default([]))[:2] %}
+        <li>
+          <span class="badge ok">定位假设</span>
+          <span class="gap-main">{{ item.statement }}</span>
+          <span class="gap-sub">置信度 {{ item.confidence }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无待验证判断。</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- 面试统计 -->
+  <section class="card">
+    <h2>面试统计</h2>
+    <div class="card-row">
+      <div class="stat-card">
+        <span class="stat-num">{{ patterns.total_interview_rounds | default(0) }}</span>
+        <span class="stat-label">总面试轮次</span>
+      </div>
+      <div class="stat-card highlight">
+        <span class="stat-num">{{ patterns.pass_rate | default(0) }}%</span>
+        <span class="stat-label">通过率</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ patterns.total_prep_rounds | default(0) }}</span>
+        <span class="stat-label">准备会话（不计入通过率）</span>
+      </div>
+      {% for stage, count in (patterns.stage_summary | default({})).items() %}
+      {% if loop.index <= 2 %}
+      <div class="stat-card">
+        <span class="stat-num">{{ count }}</span>
+        <span class="stat-label">{{ stage_label.get(stage, stage) }}</span>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+</main>
+
+<footer>生成于 {{ generated_at }} · resume-forge</footer>
+<script src="assets/nav.js?v={{ asset_version }}"></script>
+</body>
+</html>

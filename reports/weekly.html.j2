@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if is_index %}周报列表{% elif weekly %}{{ weekly.week }} 周报{% else %}周报{% endif %} — 求职管理</title>
+  <link rel="stylesheet" href="../assets/style.css?v={{ asset_version }}">
+</head>
+<body>
+<header class="site-header">
+  <h1>{% if is_index %}周报列表{% elif weekly %}{{ weekly.week }} 周报{% else %}周报{% endif %}</h1>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-label="切换导航">菜单</button>
+  <nav>
+    <a href="../index.html">总览</a>
+    <a href="../insights.html">洞察</a>
+    <a href="../jobs/index.html">岗位</a>
+    <a href="index.html" class="active">周报</a>
+    <a href="../resumes/index.html">简历下载</a>
+  </nav>
+  <span class="updated">更新：{{ generated_at }}</span>
+</header>
+
+<main>
+{% if is_index %}
+  <!-- 周报列表 -->
+  <section class="card">
+    <h2>历史周报</h2>
+    {% if weeks %}
+    <ul class="week-list">
+    {% for week in weeks %}
+      <li><a href="{{ week }}.html">{{ week }}</a></li>
+    {% endfor %}
+    </ul>
+    {% else %}
+      <p class="empty">暂无周报。每周一由 CI 自动生成，或执行 <code>make weekly</code>。</p>
+    {% endif %}
+  </section>
+
+{% elif weekly %}
+  {% set overview = weekly.overview | default({}) %}
+  {% set summary = weekly.readable_summary | default({}) %}
+  {% set validation_label = {'simulation_only': '仅模拟', 'mixed': '混合验证', 'validated': '已验证'} %}
+  {% set gap_label = {'expression': '表达', 'capability': '能力'} %}
+  {% set severity_label = {'high': '高', 'medium': '中', 'low': '低'} %}
+
+  <section class="card">
+    <h2>本周结论摘要</h2>
+    {% if summary.headline %}
+      <p>{{ summary.headline }}</p>
+      <p class="empty mt">{{ summary.scope }} {{ summary.confidence_note }}</p>
+      {% if summary.evidence_jobs %}
+      <div class="heat-tags mt">
+        {% for job in summary.evidence_jobs %}<span>{{ job }}</span>{% endfor %}
+      </div>
+      {% endif %}
+    {% else %}
+      <p class="empty">暂无摘要。</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>本周观察面</h2>
+    <div class="card-row">
+      <div class="stat-card">
+        <span class="stat-num">{{ overview.total_jobs | default(0) }}</span>
+        <span class="stat-label">在管岗位</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ overview.total_prep_rounds | default(0) }}</span>
+        <span class="stat-label">Prep 记录</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ overview.total_interview_rounds | default(0) }}</span>
+        <span class="stat-label">真实面试轮次</span>
+      </div>
+      <div class="stat-card highlight">
+        <span class="stat-num">{{ validation_label.get(overview.validation_stage, overview.validation_stage | default('unknown')) }}</span>
+        <span class="stat-label">证据阶段</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="two-col">
+    <section class="card">
+      <h2>当前较稳定的结论</h2>
+      {% if weekly.stable_findings %}
+      <ul class="gap-list">
+      {% for item in weekly.stable_findings %}
+        <li>
+          <span class="badge {% if item.category == 'capability' %}danger{% else %}warn{% endif %}">
+            {{ gap_label.get(item.category, item.category or '观察') }}
+          </span>
+          <span class="gap-main">{{ item.statement }}</span>
+          <span class="gap-sub">严重度 {{ severity_label.get(item.severity, item.severity or 'n/a') }}</span>
+        </li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无稳定结论。</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>仍待验证的判断</h2>
+      {% if weekly.provisional_findings %}
+      <ul class="gap-list">
+      {% for item in weekly.provisional_findings %}
+        <li>
+          <span class="badge ok">{{ item.kind }}</span>
+          <span class="gap-main">{{ item.statement }}</span>
+          <span class="gap-sub">置信度 {{ item.confidence or 'n/a' }}{% if item.next_validation %} · 下一步 {{ item.next_validation }}{% endif %}</span>
+        </li>
+      {% endfor %}
+      </ul>
+      {% else %}
+        <p class="empty">暂无待验证判断。</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>建议优先动作</h2>
+    {% if weekly.priority_actions %}
+    <ul class="gap-list">
+    {% for item in weekly.priority_actions %}
+      <li><span class="badge warn">Action</span> {{ item }}</li>
+    {% endfor %}
+    </ul>
+    {% else %}
+      <p class="empty">暂无动作建议。</p>
+    {% endif %}
+  </section>
+
+  <!-- 单周周报 -->
+  <section class="card">
+    <h2>本周新增投递（{{ weekly.new_applications | length }}）</h2>
+    {% if weekly.new_applications %}
+    <table class="timeline-table">
+      <thead><tr><th>日期</th><th>岗位</th><th>事件</th></tr></thead>
+      <tbody>
+      {% for ev in weekly.new_applications %}
+        <tr>
+          <td>{{ ev.date }}</td>
+          <td><a href="../jobs/{{ ev.job }}.html">{{ ev.job }}</a></td>
+          <td>{{ ev.event }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">本周无新投递。</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>本周准备动作（{{ weekly.new_prep_sessions | default([]) | length }}）</h2>
+    {% if weekly.new_prep_sessions %}
+    <table class="timeline-table">
+      <thead><tr><th>日期</th><th>岗位</th><th>事件</th></tr></thead>
+      <tbody>
+      {% for ev in weekly.new_prep_sessions %}
+        <tr>
+          <td>{{ ev.date }}</td>
+          <td><a href="../jobs/{{ ev.job }}.html">{{ ev.job }}</a></td>
+          <td>{{ ev.event }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">本周无新的准备动作。</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>本周面试（{{ weekly.new_interviews | length }}）</h2>
+    {% if weekly.new_interviews %}
+    <table class="timeline-table">
+      <thead><tr><th>日期</th><th>岗位</th><th>事件</th></tr></thead>
+      <tbody>
+      {% for ev in weekly.new_interviews %}
+        <tr>
+          <td>{{ ev.date }}</td>
+          <td><a href="../jobs/{{ ev.job }}.html">{{ ev.job }}</a></td>
+          <td>{{ ev.event }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">本周无面试。</p>
+    {% endif %}
+  </section>
+{% endif %}
+</main>
+
+<footer>生成于 {{ generated_at }} · resume-forge</footer>
+<script src="../assets/nav.js?v={{ asset_version }}"></script>
+</body>
+</html>

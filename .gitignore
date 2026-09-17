@@ -1,0 +1,34 @@
+# Build output
+output/
+
+# Auto-generated insights (produced at deploy time, not persisted in repo)
+jobs/_insights/
+
+# Temporary imported source files; copied into each job's jd_source/ after ingestion
+import/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# LaTeX intermediate files
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.xdv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

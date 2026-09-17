@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>求职仪表盘</title>
+  <link rel="stylesheet" href="assets/style.css?v={{ asset_version }}">
+</head>
+<body>
+<header class="site-header">
+  <h1>求职仪表盘</h1>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-label="切换导航">菜单</button>
+  <nav>
+    <a href="index.html" class="active">总览</a>
+    <a href="insights.html">洞察</a>
+    <a href="jobs/index.html">岗位</a>
+    <a href="weekly/index.html">周报</a>
+    <a href="resumes/index.html">简历下载</a>
+  </nav>
+  <span class="updated">更新：{{ generated_at }}</span>
+</header>
+
+<main>
+  <!-- 投递概览卡片 -->
+  <section class="card-row">
+    {% set labels = [
+      ('applied',      '已投递'),
+      ('screening',    '筛选中'),
+      ('interviewing', '面试中'),
+      ('offer',        'Offer'),
+      ('rejected',     '已拒绝'),
+    ] %}
+    {% for key, label in labels %}
+    <div class="stat-card {% if key == 'offer' %}highlight{% elif key == 'rejected' %}muted{% endif %}">
+      <span class="stat-num">{{ stage_counts.get(key, 0) }}</span>
+      <span class="stat-label">{{ label }}</span>
+    </div>
+    {% endfor %}
+  </section>
+
+  <div class="two-col">
+    <!-- 关键词趋势（去重聚合） -->
+    <section class="card">
+      <h2>高频需求关键词（去重聚合）</h2>
+      {% set kw = insights.keyword_trends %}
+      {% if kw.canonical_keywords %}
+        <div class="dense-meta">
+          <span>岗位数：{{ kw.total_jobs | default(0) }}</span>
+          <span>去重关键词：{{ kw.canonical_keywords | length }}</span>
+          <span>分类数：{{ kw.category_heatmap | default([]) | length }}</span>
+        </div>
+
+        <div class="word-cloud">
+        {% for item in kw.canonical_keywords[:14] %}
+          <span class="cloud-item" style="--w: {{ item.count }};">{{ item.keyword }} · {{ item.pct }}%</span>
+        {% endfor %}
+        </div>
+
+        <div class="heat-tags mt">
+        {% for item in kw.category_heatmap[:6] %}
+          <span>{{ item.category }} · {{ item.pct }}%</span>
+        {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty">暂无数据，分析更多 JD 后自动生成。</p>
+      {% endif %}
+    </section>
+
+    <!-- 薄弱环节（可改进优先） -->
+    <section class="card">
+      <h2>薄弱环节追踪</h2>
+      {% set gaps = insights.skill_gaps %}
+      {% if gaps.focus_gaps or gaps.from_interviews %}
+        <h3 class="sub-heading">优先改进（可行动）</h3>
+        <ul class="gap-list">
+        {% for item in gaps.focus_gaps[:4] %}
+          <li>
+            <span class="badge danger">P{{ loop.index }}</span>
+            <span class="gap-main">{{ item.gap }}</span>
+            <span class="gap-sub">{{ item.category }} · 建议周期 {{ item.improve_horizon }}</span>
+          </li>
+        {% else %}
+          <li class="empty">暂无</li>
+        {% endfor %}
+        </ul>
+
+        <h3 class="sub-heading mt">真实面试复盘</h3>
+        <ul class="gap-list">
+        {% for item in gaps.from_interviews[:5] %}
+          <li><span class="badge danger">×{{ item.count }}</span> {{ item.item }}</li>
+        {% else %}
+          <li class="empty">暂无</li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">暂无数据。</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- 最近动态 -->
+  <section class="card">
+    <h2>最近动态</h2>
+    {% if recent_timeline %}
+    <table class="timeline-table">
+      <thead><tr><th>日期</th><th>岗位</th><th>事件</th><th>结果</th></tr></thead>
+      <tbody>
+      {% for ev in recent_timeline %}
+        <tr>
+          <td>{{ ev.date }}</td>
+          <td><a href="jobs/{{ ev.job }}.html">{{ ev.job }}</a></td>
+          <td>{{ ev.event }}</td>
+          <td>
+            {% if ev.result == 'passed' %}<span class="badge ok">通过</span>
+            {% elif ev.result == 'failed' %}<span class="badge danger">未通过</span>
+            {% elif ev.result %}<span class="badge warn">{{ ev.result }}</span>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">暂无记录。投递或面试后通过 Copilot 更新 status.yaml。</p>
+    {% endif %}
+  </section>
+</main>
+
+<footer>生成于 {{ generated_at }} · resume-forge</footer>
+<script src="assets/nav.js?v={{ asset_version }}"></script>
+</body>
+</html>

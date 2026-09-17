@@ -1,0 +1,7 @@
+id: search_platform
+name: "站内搜索平台"
+company: "云帆科技"
+period: "2023.3 -- 2024.1"
+tech: ["Elasticsearch", "检索建模", "性能优化", "容量规划"]
+role: "核心开发，负责索引与检索链路"
+tags: ["搜索", "Elasticsearch", "性能优化", "平台建设"]

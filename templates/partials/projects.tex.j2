@@ -1,0 +1,11 @@
+%% ── 项目经历 ──────────────────────────────────────────────────────────────
+\section{\faBriefcase\ 项目经历}
+
+{% for project in projects %}
+\datedsubsection{\textbf{ {{- project.meta.name -}} }}{ {{- project.meta.period -}} }
+\role{ {{- project.meta.tech | join(', ') -}} }{ {{- project.meta.role -}} }
+\begin{onehalfspacing}
+{{ project.content_tex }}
+\end{onehalfspacing}
+
+{% endfor %}

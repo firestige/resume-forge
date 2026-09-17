@@ -1,0 +1,25 @@
+meta:
+  job_ref: "2026-01-example-tech-backend"
+  language: zh
+  template: resume_zh
+
+# 覆写 profile 字段（可选）
+profile:
+  title: "高并发服务端工程师"
+
+# 项目选取与排序（有序数组，决定简历中的展示顺序）
+projects:
+  - course_platform      # 使用 base 叙事
+  - search_platform      # 使用 base 叙事
+  - data_pipeline        # variant/projects/data_pipeline.md 存在 → 用覆写版
+  - content_review       # 使用 base 叙事
+
+# 工作经历选取（有序数组）
+# 中国职场默认要求时间轴完整，弱相关经历可降权但不建议移除。
+experience:
+  - yunfan
+  - xinghe
+  - lanjing
+
+# 技能：variant/skills.md 存在则用覆写版，否则用 base/skills.md
+# 教育：始终用 base

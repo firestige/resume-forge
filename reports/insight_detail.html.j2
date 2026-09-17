@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ detail.title }} — 洞察详情</title>
+  <link rel="stylesheet" href="../assets/style.css?v={{ asset_version }}">
+</head>
+<body>
+<header class="site-header">
+  <a class="back-btn" href="../insights.html">返回洞察</a>
+  <h1>{{ detail.title }}</h1>
+  <span class="updated">更新：{{ generated_at }}</span>
+</header>
+
+<main>
+  {% set kw = insights.keyword_trends %}
+  {% set gaps = insights.skill_gaps %}
+  {% set patterns = insights.interview_patterns %}
+
+  {% if detail.key == 'category-heatmap' %}
+  <section class="card">
+    <h2>高频需求分类热力（全量）</h2>
+    {% if kw.category_heatmap %}
+    <div class="heat-grid">
+      {% for item in kw.category_heatmap %}
+      <div class="heat-cell" style="--heat: {{ item.pct | default(0) }}%;">
+        <div class="heat-title">{{ item.category }}</div>
+        <div class="heat-meta">{{ item.count }} 次 · {{ item.pct }}%</div>
+        <div class="heat-tags">
+          {% for t in item.keywords %}<span>{{ t }}</span>{% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty">暂无数据。</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if detail.key == 'canonical-keywords' %}
+  <section class="card">
+    <h2>关键词云（全量）</h2>
+    {% if kw.canonical_keywords %}
+      <div class="word-cloud">
+      {% for item in kw.canonical_keywords %}
+        <span class="cloud-item" style="--w: {{ item.count }};">{{ item.keyword }} · {{ item.count }}次 / {{ item.pct }}%</span>
+      {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty">暂无数据。</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if detail.key == 'focus-gaps' %}
+  <section class="card">
+    <h2>优先改进薄弱项（全量）</h2>
+    {% if gaps.focus_gaps %}
+    <ul class="gap-list">
+    {% for item in gaps.focus_gaps %}
+      <li>
+        <span class="badge danger">P{{ loop.index }}</span>
+        <span class="gap-main">{{ item.gap }}</span>
+        <span class="gap-sub">{{ item.category }} · 频次 {{ item.count }} · 分值 {{ item.priority_score }} · 建议周期 {{ item.improve_horizon }}</span>
+      </li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">暂无数据。</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if detail.key == 'non-actionable-gaps' %}
+  <section class="card">
+    <h2>不可直接改进项（全量）</h2>
+    {% if gaps.non_actionable_gaps %}
+    <ul class="gap-list">
+    {% for item in gaps.non_actionable_gaps %}
+      <li>
+        <span class="badge warn">低优先</span>
+        <span class="gap-main">{{ item.gap }}</span>
+        <span class="gap-sub">{{ item.category }} · 频次 {{ item.count }}</span>
+      </li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">暂无数据。</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if detail.key == 'interview-gaps' %}
+  <section class="card">
+    <h2>真实面试复盘薄弱项（全量）</h2>
+    {% if gaps.from_interviews %}
+    <ul class="gap-list">
+    {% for item in gaps.from_interviews %}
+      <li>
+        <span class="badge danger">×{{ item.count }}</span>
+        <span class="gap-main">{{ item.item }}</span>
+        <span class="gap-sub">{{ item.category }}</span>
+      </li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">暂无数据。</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if detail.key == 'prep-gaps' %}
+  <section class="card">
+    <h2>备战清单（全量）</h2>
+    {% if gaps.from_prep %}
+    <ul class="gap-list">
+    {% for item in gaps.from_prep %}
+      <li><span class="badge warn">准备</span> {{ item.item }}</li>
+    {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">暂无数据。</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if detail.key == 'interview-stats' %}
+  <section class="card">
+    <h2>面试统计（全量）</h2>
+    <div class="card-row">
+      <div class="stat-card">
+        <span class="stat-num">{{ patterns.total_interview_rounds | default(0) }}</span>
+        <span class="stat-label">总面试轮次</span>
+      </div>
+      <div class="stat-card highlight">
+        <span class="stat-num">{{ patterns.pass_rate | default(0) }}%</span>
+        <span class="stat-label">通过率</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ patterns.total_prep_rounds | default(0) }}</span>
+        <span class="stat-label">准备会话（不计入通过率）</span>
+      </div>
+      {% for stage, count in (patterns.stage_summary | default({})).items() %}
+      <div class="stat-card">
+        <span class="stat-num">{{ count }}</span>
+        <span class="stat-label">{{ stage_label.get(stage, stage) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</main>
+
+<footer>生成于 {{ generated_at }} · resume-forge</footer>
+<script src="../assets/nav.js?v={{ asset_version }}"></script>
+</body>
+</html>

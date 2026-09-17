@@ -1,0 +1,12 @@
+# 示例数据（虚构）— 请替换为你自己的信息
+education:
+  - id: donghu
+    school: "东湖大学"
+    location: "武汉"
+    period: "2012 -- 2016"
+    degree: "学士"
+    major: "计算机科学与技术"
+
+certifications:
+  - name: "大学英语六级（CET-6）"
+    year: "2015"

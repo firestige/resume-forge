@@ -1,0 +1,137 @@
+name: Build Resumes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'base/**'
+      - 'jobs/*/variant/**'
+      - 'templates/**'
+      - 'styles/**'
+  workflow_dispatch:
+    inputs:
+      job_target:
+        description: '指定岗位目录名（留空=全量重构建）'
+        required: false
+        type: string
+
+jobs:
+  # ── 1. 检测变更范围 ──────────────────────────────────────────────────────
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      build_full: ${{ steps.resolve.outputs.build_full }}
+      variants: ${{ steps.resolve.outputs.variants }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: resolve
+        name: Resolve build targets
+        run: |
+          # 手动触发且指定了岗位
+          if [[ -n "${{ inputs.job_target }}" ]]; then
+            if [[ -d "jobs/${{ inputs.job_target }}" ]]; then
+              echo "build_full=false" >> $GITHUB_OUTPUT
+              echo "variants=[\"${{ inputs.job_target }}\"]" >> $GITHUB_OUTPUT
+            else
+              echo "[warn] job_target not found: jobs/${{ inputs.job_target }}, skip variant build"
+              echo "build_full=false" >> $GITHUB_OUTPUT
+              echo "variants=[]" >> $GITHUB_OUTPUT
+            fi
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+
+          # 首次推送或浅克隆导致无法比对父提交时，按全量重构建处理
+          if [[ -z "$CHANGED" ]]; then
+            echo "[warn] cannot resolve changed files (initial push or shallow clone), rebuilding everything"
+            echo "build_full=true" >> $GITHUB_OUTPUT
+            ALL=$(find jobs -maxdepth 1 -mindepth 1 -type d ! -name '_*' \
+              | xargs -I{} basename {} \
+              | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            echo "variants=$ALL" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # base / templates / styles 变更 → 全量重构建
+          if echo "$CHANGED" | grep -qE '^(base|templates|styles)/'; then
+            echo "build_full=true" >> $GITHUB_OUTPUT
+            ALL=$(find jobs -maxdepth 1 -mindepth 1 -type d ! -name '_*' \
+              | xargs -I{} basename {} \
+              | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            echo "variants=$ALL" >> $GITHUB_OUTPUT
+          else
+            echo "build_full=false" >> $GITHUB_OUTPUT
+            RAW_DIRS=$(echo "$CHANGED" \
+              | grep -E '^jobs/[^/]+/variant/' \
+              | sed 's|jobs/\([^/]*\)/.*|\1|' \
+              | sort -u || true)
+
+            # 过滤已删除或不存在目录，避免 matrix 构建无效 job_dir 导致失败。
+            EXISTING_DIRS=$(while IFS= read -r d; do
+              [[ -z "$d" ]] && continue
+              [[ -d "jobs/$d" ]] && echo "$d"
+            done <<< "$RAW_DIRS" || true)
+
+            DIRS=$(printf "%s\n" "$EXISTING_DIRS" \
+              | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            echo "variants=${DIRS:-[]}" >> $GITHUB_OUTPUT
+          fi
+
+  # ── 2. 构建完整版简历（base 全量时同步更新）─────────────────────────────
+  build-full:
+    needs: detect
+    if: needs.detect.outputs.build_full == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            texlive-xetex texlive-fonts-extra texlive-latex-extra \
+            texlive-lang-chinese fonts-noto-cjk
+      - run: python scripts/build.py --full
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdf-full
+          path: output/resumes/resume_full.pdf
+          retention-days: 90
+
+  # ── 3. 构建岗位变体（矩阵，单个失败不影响其他）──────────────────────────
+  build-variant:
+    needs: detect
+    if: needs.detect.outputs.variants != '[]' && needs.detect.outputs.variants != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        job_dir: ${{ fromJson(needs.detect.outputs.variants) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            texlive-xetex texlive-fonts-extra texlive-latex-extra \
+            texlive-lang-chinese fonts-noto-cjk
+      - name: Build variant PDF
+        run: python scripts/build.py --job ${{ matrix.job_dir }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdf-${{ matrix.job_dir }}
+          path: output/resumes/${{ matrix.job_dir }}.pdf
+          retention-days: 90

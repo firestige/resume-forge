@@ -1,0 +1,46 @@
+date: 2026-01-14
+record_type: live_interview
+round: "技术一面"
+duration: "60min"
+interviewer_role: "业务后端团队 Tech Lead"
+result: passed
+
+questions:
+  - question: "介绍课程平台的服务化拆分方案，边界是怎么划的"
+    category: "architecture"
+    answer_quality: good
+    gap_type: expression
+    notes: "回答流畅，追问了拆分期间的不停机迁移方案"
+
+  - question: "为什么选本地消息表而不是强一致的分布式事务方案"
+    category: "distributed_transaction"
+    answer_quality: good
+    gap_type: none
+    notes: "给出了锁竞争与吞吐的权衡口径"
+
+  - question: "Go 的 GPM 调度模型"
+    category: "language_runtime"
+    answer_quality: weak
+    gap_type: capability
+    notes: "只答了表层，M:N 调度与 P 的本地队列细节没答好"
+
+risk_updates:
+  - risk_id: "level_mismatch"
+    new_status: validated
+    evidence: "面试官确认本次 HC 按高级岗推进"
+  - risk_id: "oncall_pressure"
+    new_status: mitigated
+    evidence: "团队无固定夜间值班，仅业务高峰期轮值"
+
+self_model_updates:
+  - theme: "Go 运行时深度"
+    old_belief: "Go 能支撑基础沟通"
+    new_belief: "Go 运行时相关问题会暴露真实深度不足"
+    gap_type: capability
+
+self_reflection: |
+  架构与权衡类问题表现稳定，语言运行时深度是明确短板。
+
+action_items:
+  - "补齐 Go GPM 调度模型与 GC 三色标记"
+  - "准备一个 Go 并发实践的具体案例"

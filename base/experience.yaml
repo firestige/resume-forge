@@ -1,0 +1,21 @@
+# 示例数据（虚构）— 请替换为你自己的信息
+# 注意：中国职场默认要求时间轴完整，弱相关经历可弱化描述，但不建议直接删除。
+experience:
+  - id: yunfan
+    company: "云帆科技"
+    location: "北京"
+    period: "2023年3月 -- 至今"
+    role: "高级后端工程师"
+    level: "职级：P6"
+
+  - id: xinghe
+    company: "星河网络"
+    location: "北京"
+    period: "2021年4月 -- 2023年2月"
+    role: "后端开发工程师"
+
+  - id: lanjing
+    company: "蓝鲸信息"
+    location: "成都"
+    period: "2019年7月 -- 2021年3月"
+    role: "软件开发工程师"

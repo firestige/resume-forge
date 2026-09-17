@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if is_list %}岗位列表{% else %}{{ job.analysis.company }} · {{ job.analysis.role }}{% endif %} — 求职管理</title>
+  <link rel="stylesheet" href="../assets/style.css?v={{ asset_version }}">
+</head>
+<body>
+<header class="site-header">
+  <h1>{% if is_list %}岗位列表{% else %}{{ job.analysis.company | default('—') }} · {{ job.analysis.role | default(job.id) }}{% endif %}</h1>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-label="切换导航">菜单</button>
+  <nav>
+    <a href="../index.html">总览</a>
+    <a href="../insights.html">洞察</a>
+    <a href="index.html" {% if is_list %}class="active"{% endif %}>岗位</a>
+    <a href="../weekly/index.html">周报</a>
+    <a href="../resumes/index.html">简历下载</a>
+  </nav>
+  <span class="updated">更新：{{ generated_at }}</span>
+</header>
+
+<main>
+{% if is_list %}
+  <!-- 岗位列表 -->
+  <section class="card-row">
+    {% for group in job_groups %}
+    <div class="stat-card {% if group.title == '活跃岗位' %}highlight{% endif %}">
+      <span class="stat-num">{{ group.count }}</span>
+      <span class="stat-label">{{ group.title }}</span>
+    </div>
+    {% endfor %}
+  </section>
+
+  {% for group in job_groups %}
+  <section class="card">
+    <h2>{{ group.title }}（{{ group.count }}）</h2>
+    <p class="empty">{{ group.description }}</p>
+
+    {% if group.status_groups %}
+      {% for stage_group in group.status_groups %}
+      <h3 class="sub-heading mt">{{ stage_group.label }}（{{ stage_group.jobs | length }}）</h3>
+      <table class="timeline-table table-desktop">
+        <thead>
+          <tr><th>岗位目录</th><th>公司</th><th>职位</th><th>匹配分</th><th>状态</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+        {% for j in stage_group.jobs %}
+          <tr>
+            <td>{{ j.id }}</td>
+            <td>{{ j.analysis.company | default('—') }}</td>
+            <td>{{ j.analysis.role | default('—') }}</td>
+            <td>
+              {% set score = (j.analysis.match_score | default({})).overall | default(0) %}
+              <span class="badge {% if score >= 80 %}ok{% elif score >= 60 %}warn{% else %}danger{% endif %}">{{ score }}</span>
+            </td>
+            <td>{{ stage_label.get(j.status.get('current_stage', 'unknown'), j.status.get('current_stage', '—')) }}</td>
+            <td><a href="{{ j.id }}.html">详情</a> · <a href="../resumes/{{ j.id }}.pdf" target="_blank">PDF</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="gallery-list mobile-only">
+        {% for j in stage_group.jobs %}
+        {% set score = (j.analysis.match_score | default({})).overall | default(0) %}
+        <article class="gallery-card">
+          <h3>{{ j.analysis.company | default('—') }} · {{ j.analysis.role | default('—') }}</h3>
+          <p class="gallery-meta"><strong>目录：</strong>{{ j.id }}</p>
+          <p class="gallery-meta"><strong>匹配分：</strong><span class="badge {% if score >= 80 %}ok{% elif score >= 60 %}warn{% else %}danger{% endif %}">{{ score }}</span></p>
+          <p class="gallery-meta"><strong>状态：</strong>{{ stage_label.get(j.status.get('current_stage', 'unknown'), j.status.get('current_stage', '—')) }}</p>
+          <div class="gallery-actions">
+            <a href="{{ j.id }}.html">详情</a>
+            <a href="../resumes/{{ j.id }}.pdf" target="_blank">PDF</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">当前没有该分组的岗位。</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+
+{% else %}
+  <!-- 单岗位详情 -->
+  {% set ana = job.analysis %}
+  {% set st  = job.status %}
+
+  <div class="two-col">
+    <section class="card">
+      <h2>JD 分析</h2>
+      <dl class="kv-list">
+        <dt>公司</dt><dd>{{ ana.company | default('—') }}</dd>
+        <dt>职位</dt><dd>{{ ana.role | default('—') }}</dd>
+        <dt>级别</dt><dd>{{ ana.level | default('—') }}</dd>
+        <dt>地点</dt><dd>{{ ana.location | default('—') }}</dd>
+        <dt>分析日期</dt><dd>{{ ana.parsed_at | default('—') }}</dd>
+      </dl>
+      <h3 class="sub-heading mt">匹配评分</h3>
+      {% set score = (ana.match_score | default({})).overall | default(0) %}
+      <div class="score-block">
+        <span class="score-num {% if score >= 80 %}ok{% elif score >= 60 %}warn{% else %}danger{% endif %}">{{ score }}</span>
+        <span class="score-label">/ 100</span>
+      </div>
+      <ul class="detail-list">
+      {% for d in (ana.match_score | default({})).details | default([]) %}
+        <li>
+          <span class="badge {% if d.match == 'strong' %}ok{% elif d.match == 'partial' %}warn{% else %}danger{% endif %}">{{ d.match }}</span>
+          <strong>{{ d.skill }}</strong> — {{ d.evidence }}
+        </li>
+      {% endfor %}
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>投递状态</h2>
+      <dl class="kv-list">
+        <dt>当前阶段</dt><dd>{{ stage_label.get(st.get('current_stage', 'unknown'), '—') }}</dd>
+        <dt>投递渠道</dt><dd>{{ st.channel | default('—') }}</dd>
+        <dt>投递日期</dt><dd>{{ st.applied_at | default('—') }}</dd>
+      </dl>
+      <h3 class="sub-heading mt">时间线</h3>
+      <ul class="timeline-list">
+      {% for ev in st.timeline | default([]) %}
+        <li>
+          <span class="tl-date">{{ ev.date }}</span>
+          <span class="tl-event">{{ ev.event }}</span>
+          {% if ev.result %}
+            <span class="badge {% if ev.result == 'passed' %}ok{% elif ev.result == 'failed' %}danger{% else %}warn{% endif %}">{{ ev.result }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>简历定制方案</h2>
+    {% set cfg = job.variant_config %}
+    {% if cfg %}
+    <dl class="kv-list">
+      <dt>模板</dt><dd>{{ cfg.meta.template | default('resume_zh') }}</dd>
+      <dt>Title 覆写</dt><dd>{{ cfg.profile.title | default('—') }}</dd>
+      <dt>项目顺序</dt><dd>{{ cfg.projects | default([]) | join(' → ') }}</dd>
+      <dt>工作经历</dt><dd>{{ cfg.experience | default([]) | join(', ') }}</dd>
+    </dl>
+    <div class="pdf-links"><a class="btn" href="../resumes/{{ job.id }}.pdf" target="_blank">下载此版简历</a></div>
+    {% else %}
+      <p class="empty">尚未配置 variant/config.yaml。</p>
+    {% endif %}
+  </section>
+
+  {% if job.study_materials %}
+  <section class="card">
+    <h2>复习资料（题库 / 策略）</h2>
+    <p class="empty">可在手机端直接浏览，用于随时复习与强化记忆。</p>
+    {% for doc in job.study_materials %}
+    <details class="study-doc">
+      <summary>{{ doc.title }}</summary>
+      <div class="study-doc-body">{{ doc.html }}</div>
+    </details>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if job.prep_sessions %}
+  <section class="card">
+    <h2>面试准备记录（策略，不计入复盘）</h2>
+    {% for iv in job.prep_sessions %}
+    <div class="interview-block">
+      <h3>{{ iv.round | default('面试准备') }} · {{ iv.date | default('') }} · {{ iv.duration | default('') }}</h3>
+      {% if iv.action_items %}
+      <ul class="gap-list mt">
+      {% for item in iv.action_items %}
+        <li><span class="badge warn">准备</span> {{ item }}</li>
+      {% endfor %}
+      </ul>
+      {% endif %}
+      {% if iv.self_reflection %}
+      <p class="reflection">{{ iv.self_reflection }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if job.interviews %}
+  <section class="card">
+    <h2>面试复盘（真实面试 {{ job.interviews | length }} 轮）</h2>
+    {% for iv in job.interviews %}
+    <div class="interview-block">
+      <h3>{{ iv.round | default('面试') }} · {{ iv.date | default('') }} · {{ iv.duration | default('') }}</h3>
+      {% if iv.questions %}
+      <table class="timeline-table">
+        <thead><tr><th>问题</th><th>质量</th><th>备注</th></tr></thead>
+        <tbody>
+        {% for q in iv.questions %}
+          <tr>
+            <td>{{ q.question }}</td>
+            <td><span class="badge {% if q.answer_quality == 'good' %}ok{% elif q.answer_quality == 'weak' %}danger{% else %}warn{% endif %}">{{ q.answer_quality }}</span></td>
+            <td>{{ q.notes | default('') }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+      {% if iv.self_reflection %}
+      <p class="reflection">💬 {{ iv.self_reflection }}</p>
+      {% endif %}
+      {% if iv.action_items %}
+      <ul class="gap-list mt">
+      {% for item in iv.action_items %}
+        <li><span class="badge warn">行动</span> {{ item }}</li>
+      {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>待改进 / Gap</h2>
+    {% set gaps = ana.gaps | default([]) %}
+    {% if gaps %}
+    <ul class="gap-list">
+    {% for g in gaps %}
+      {% if g is mapping %}
+      <li>
+        <span class="badge {% if g.severity == 'high' %}danger{% elif g.severity == 'medium' %}warn{% else %}ok{% endif %}">
+          {{ g.severity | default('gap') }}
+        </span>
+        <span class="gap-main">{{ g.gap | default('未命名 gap') }}</span>
+        {% if g.strategy %}
+        <span class="gap-sub">建议：{{ g.strategy }}</span>
+        {% endif %}
+      </li>
+      {% else %}
+      <li><span class="badge warn">gap</span><span class="gap-main">{{ g }}</span></li>
+      {% endif %}
+    {% endfor %}
+    </ul>
+    {% else %}
+      <p class="empty">暂无记录。</p>
+    {% endif %}
+  </section>
+{% endif %}
+</main>
+
+<footer>生成于 {{ generated_at }} · resume-forge</footer>
+{% if job.has_mermaid_study_materials %}
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+{% endif %}
+<script src="../assets/nav.js?v={{ asset_version }}"></script>
+</body>
+</html>

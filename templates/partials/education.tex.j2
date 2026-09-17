@@ -1,0 +1,7 @@
+%% ── 教育背景 ──────────────────────────────────────────────────────────────
+\section{\faGraduationCap\ 教育背景}
+
+{% for edu in education %}
+\datedsubsection{\textbf{ {{- edu.school -}} }, {{ edu.location }}}{ {{- edu.period -}} }
+\textit{ {{- edu.degree -}} }\ {{ edu.major }}
+{% endfor %}
